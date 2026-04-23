@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Mirror App</title>
+  <style>
+    body { margin:0; overflow:hidden; background:black; }
+    video {
+      width:100%;
+      height:100vh;
+      object-fit:cover;
+      transform: scaleX(-1); /* mirror effect */
+    }
+  </style>
+</head>
+<body>
+
+<video id="camera" autoplay playsinline></video>
+
+<script>
+  const video = document.getElementById('camera');
+
+  navigator.mediaDevices.getUserMedia({
+    video: { facingMode: "user" }
+  })
+  .then(stream => {
+    video.srcObject = stream;
+  })
+  .catch(err => {
+    alert("Camera access denied");
+  });
+</script>
+
+</body>
+</html>
