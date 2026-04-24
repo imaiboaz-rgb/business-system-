@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mirror App</title>
+
+<style>
+  body {
+    margin: 0;
+    background: black;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+  }
+
+  video {
+    width: 100vw;
+    height: 100vh;
+    object-fit: cover;
+    transform: scaleX(-1); /* Mirror effect */
+  }
+
+  .controls {
+    position: fixed;
+    bottom: 20px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  button {
+    padding: 12px 16px;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    background: white;
+    cursor: pointer;
+  }
+
+  button:hover {
+    opacity: 0.9;
+  }
+</style>
+</head>
+
+<body>
+
+<video id="camera" autoplay playsinline></video>
+
+<div class="controls">
+  <button onclick="toggleCamera()">Switch Camera</button>
+  <button onclick="takePhoto()">Snap</button>
+</div>
+
+<script>
+let currentFacing = "user"; // front camera
+let stream;
+
+async function startCamera() {
+  if (stream) {
+    stream.getTracks().forEach(track => track.stop());
+  }
+
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: currentFacing }
+    });
+
+    document.getElementById("camera").srcObject = stream;
+  } catch (err) {
+    alert("Camera access denied or not available");
+  }
+}
+
+function toggleCamera() {
+  currentFacing = currentFacing === "user" ? "environment" : "user";
+  startCamera();
+}
+
+function takePhoto() {
+  const video = document.getElementById("camera");
+  const canvas = document.createElement("canvas");
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+
+  const ctx = canvas.getContext("2d");
+
+  // Apply mirror effect to saved image
+  ctx.translate(canvas.width, 0);
+  ctx.scale(-1, 1);
+
+  ctx.drawImage(video, 0, 0);
+
+  const img = canvas.toDataURL("image/png");
+
+  const a = document.createElement("a");
+  a.href = img;
+  a.download = "mirror-photo.png";
+  a.click();
+}
+
+// Start camera on load
+startCamera();
+</script>
+
+</body>
+</html>
