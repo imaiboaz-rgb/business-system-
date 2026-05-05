@@ -71,11 +71,6 @@ let stream;
 async function startCamera() {
   const status = document.getElementById("status");
 
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    status.innerText = "Camera API not supported in this browser";
-    return;
-  }
-
   if (stream) {
     stream.getTracks().forEach(track => track.stop());
   }
@@ -86,11 +81,15 @@ async function startCamera() {
       audio: false
     });
 
-    document.getElementById("camera").srcObject = stream;
-    status.innerText = currentFacing === "user" ? "Front Camera" : "Back Camera";
+    const video = document.getElementById("camera");
+    video.srcObject = stream;
+
+    // Mirror only for front camera
+    video.style.transform = currentFacing === "user" ? "scaleX(-1)" : "scaleX(1)";
+
+    status.innerText = currentFacing === "user" ? "Front Camera (Mirror)" : "Back Camera";
   } catch (err) {
-    console.error(err);
-    status.innerText = "Camera access denied or not available";
+    status.innerText = "Camera access denied";
   }
 }
 
@@ -102,31 +101,26 @@ function toggleCamera() {
 function takePhoto() {
   const video = document.getElementById("camera");
 
-  if (!video.videoWidth) {
-    alert("Camera not ready");
-    return;
-  }
-
   const canvas = document.createElement("canvas");
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
 
   const ctx = canvas.getContext("2d");
 
-  ctx.translate(canvas.width, 0);
-  ctx.scale(-1, 1);
+  // 🔥 KEY CHANGE: Save REAL image (no mirror)
   ctx.drawImage(video, 0, 0);
 
   const img = canvas.toDataURL("image/png");
 
   const a = document.createElement("a");
   a.href = img;
-  a.download = "mirror-photo.png";
+  a.download = "real-photo.png";
   a.click();
 }
 
 window.onload = startCamera;
 </script>
 
+  
 </body>
 </html>
