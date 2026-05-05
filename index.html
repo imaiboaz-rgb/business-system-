@@ -17,7 +17,7 @@
     width: 100vw;
     height: 100vh;
     object-fit: cover;
-    transform: scaleX(-1); /* Mirror effect */
+    transform: scaleX(-1);
   }
 
   .controls {
@@ -41,35 +41,56 @@
   button:hover {
     opacity: 0.9;
   }
+
+  .status {
+    position: fixed;
+    top: 10px;
+    width: 100%;
+    text-align: center;
+    color: white;
+    font-size: 14px;
+  }
 </style>
 </head>
 
 <body>
 
+<div class="status" id="status">Initializing camera...</div>
+
 <video id="camera" autoplay playsinline></video>
 
 <div class="controls">
-  <button onclick="toggleCamera()">Switch Camera</button>
+  <button onclick="toggleCamera()">Switch</button>
   <button onclick="takePhoto()">Snap</button>
 </div>
 
 <script>
-let currentFacing = "user"; // front camera
+let currentFacing = "user";
 let stream;
 
 async function startCamera() {
+  const status = document.getElementById("status");
+
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    status.innerText = "Camera API not supported in this browser";
+    return;
+  }
+
   if (stream) {
     stream.getTracks().forEach(track => track.stop());
   }
 
   try {
     stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: currentFacing }
+      video: { facingMode: currentFacing },
+      audio: false
     });
 
     document.getElementById("camera").srcObject = stream;
+    status.innerText = currentFacing === "user" ? "Front Camera" : "Back Camera";
   } catch (err) {
-    alert("Camera access denied or not available");
+    console.error(err);
+    status.innerText = "Camera access denied or not available";
   }
 }
 
@@ -80,16 +101,20 @@ function toggleCamera() {
 
 function takePhoto() {
   const video = document.getElementById("camera");
+
+  if (!video.videoWidth) {
+    alert("Camera not ready");
+    return;
+  }
+
   const canvas = document.createElement("canvas");
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
 
   const ctx = canvas.getContext("2d");
 
-  // Apply mirror effect to saved image
   ctx.translate(canvas.width, 0);
   ctx.scale(-1, 1);
-
   ctx.drawImage(video, 0, 0);
 
   const img = canvas.toDataURL("image/png");
@@ -100,8 +125,7 @@ function takePhoto() {
   a.click();
 }
 
-// Start camera on load
-startCamera();
+window.onload = startCamera;
 </script>
 
 </body>
